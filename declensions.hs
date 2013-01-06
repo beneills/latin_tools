@@ -5,8 +5,8 @@ import Data.List
 import System.IO
 import System.Exit
 import System.Random
-import Database.HDBC
-import Database.HDBC.Sqlite3
+-- import Database.HDBC
+-- import Database.HDBC.Sqlite3
 
 -- Datatypes
 type Stem = String
