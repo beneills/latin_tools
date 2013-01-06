@@ -7,10 +7,12 @@ Declensions tool
 ================
 
 Haskell utility to quiz on declensions.  To build and run:
+
     ghc -outputdir /tmp declensions.hs
     ./declensions help
 
 To install permenantly (as root):
+
    mv declensions /usr/local/bin
 
 TODO:
