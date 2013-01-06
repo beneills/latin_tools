@@ -1,14 +1,22 @@
 -- Imports
 import Data.Maybe (isNothing, fromJust)
+import System.Environment
+import Data.List
+import System.IO
+import System.Exit
 import System.Random
+import Database.HDBC
+import Database.HDBC.Sqlite3
 
 -- Datatypes
 type Stem = String
 type Translation = String
 data Gender = Masc | Fem | Neut
-type Declension = (Translation, Gender, Cases String, Cases String)
+type Declension = (Meta, NounCases String, NounCases String)
+type Classification = String -- "<Maj> <Min>"
+type Meta = (Translation, Gender, Classification)
 type Endings = Declension
-type Cases a = (a, a, a, a, a) -- :: (Nom, Acc, Gen, Dat, Abl)
+type NounCases a = (a, a, a, a, a) -- :: (Nom, Acc, Gen, Dat, Abl)
 data Case = Nom | Acc | Gen | Dat | Abl
 data Number = Sing | Plu
 
@@ -44,7 +52,7 @@ hint :: Case -> (String -> String)
 hint Nom = ("The "++).(++"... ")
 hint Acc = ("... the "++)
 hint Gen = ("of the "++)
-hint Dat = ("by the "++)
+hint Dat = ("to the "++)
 hint Abl = ("on the "++)
 
 numberHint :: Number -> String
@@ -61,8 +69,8 @@ randomChoice xs = fmap (xs!!) $ randomRIO (0, length xs - 1)
 
 -- Decline a noun!
 get :: Number -> Case -> Declension -> String
-get Sing  c (_, _, s, _) = get' c s
-get Plu c (_, _, _, p) = get' c p
+get Sing  c (_, s, _) = get' c s
+get Plu c (_, _, p) = get' c p
 
 get' Nom (x, _, _, _, _) = x
 get' Acc (_, x, _, _, _) = x
@@ -72,8 +80,8 @@ get' Abl (_, _, _, _, x) = x
 
 -- Alter a declension
 set :: Number -> Case -> String -> Declension -> Declension
-set Sing  c x (t, g, s, p) = (t, g, set' c x s, p)
-set Plu c x (t, g, s, p) = (t, g, s, set' c x p)
+set Sing  c x (m, s, p) = (m, set' c x s, p)
+set Plu c x (m, s, p) = (m, s, set' c x p)
 
 set' Nom x (nom, acc, gen, dat, abl) = (x, acc, gen, dat, abl)
 set' Acc x (nom, acc, gen, dat, abl) = (nom, x, gen, dat, abl)
@@ -86,16 +94,16 @@ set' Abl x (nom, acc, gen, dat, abl) = (nom, acc, gen, dat, x)
 declensionMap :: (String -> String)
                  -> Declension
                  -> Declension
-declensionMap f (t, g, sing, plu) = (t, g, caseMap f sing, caseMap f plu)
+declensionMap f (m, sing, plu) = (m, caseMap f sing, caseMap f plu)
 
 -- Map over a declension's number
 caseMap :: (a -> b)
-           -> Cases a
-           -> Cases b
+           -> NounCases a
+           -> NounCases b
 caseMap f (nom, acc, gen, dat, abl) = (f nom, f acc, f gen, f dat, f abl)
 
 -- Convert a declension's number to a list
-caseList :: Cases a -> [a]
+caseList :: NounCases a -> [a]
 caseList (nom, acc, gen, dat, abl) = [nom, acc, gen, dat, abl]
 
 -- Create a declension by adding endings to a common stem
@@ -132,7 +140,7 @@ longCharsToAscii s = concat $ map f s
 -- Create string of five lines containing the whole declension
 --   in a table format
 declensionTable :: Declension -> String
-declensionTable (_, _, sing, plu) = concat lines
+declensionTable (_, sing, plu) = concat lines
   where lines = map (\ (s, p) -> s ++ p ++ "\n") $
                   zip (map (padded singWidth) (caseList sing)) (caseList plu)
         singWidth = longestSing + 2
@@ -142,71 +150,105 @@ declensionTable (_, _, sing, plu) = concat lines
 
 -- Output the noun as it might appeaar in a dictionary, including translation
 dictionaryEntry :: Declension -> String
-dictionaryEntry d@(t, g, _, _) = get Sing Nom d ++ ", " ++ get Sing Gen d ++ ", "
-                                 ++ genderLetter g ++ ". (" ++ t ++ ")"
+dictionaryEntry d@((t, g, c), _, _) = get Sing Nom d ++ ", " ++ get Sing Gen d ++ ", "
+                                 ++ c ++ " " ++ genderLetter g ++ ". (" ++ t ++ ")"
+
+dispatch = [("quiz", const quiz),
+            ("help", help)]
+
+
+help :: [String] -> IO ()
+help args = do
+  usage Nothing False
+  putStr $ "Help dialogue... TODO\n"
+  
+usage :: Maybe String -> Bool -> IO ()
+usage error exit = do
+  name <- getProgName
+  putStr $ f error
+  putStr $ "Usage: " ++ name ++ " quiz|help\n"
+  if exit
+    then exitFailure
+    else return ()
+  where f Nothing = ""
+        f (Just msg) = msg ++ "\n"
+
+
+main = do
+  args <- getArgs
+  if length args < 1
+    then usage (Just "No action specified!") True
+    else do
+      let (command:params) = args
+      let action = lookup command dispatch
+      if isNothing action
+        then usage (Just $ "Invalid action: " ++ command ++ "!") True
+        else fromJust action args
+  
+  
 
 -- Challenge user on a particular declination
-ask :: Number -> Case -> Declension -> IO ()
-ask num c d@(t, _, _, _) = do
+ask :: Number -> Case -> Declension -> IO Bool
+ask num c d@((t, _, _), _, _) = do
   let nHint = numberHint num
   putStr $ hint c t  ++ " " ++ nHint ++ "? "
+  hFlush stdout
   raw <- getLine
   let response = asciiToLongChars raw
   let answer = get num c d
   if isNothing response
-     then putStr "Malformed input!\n"
+     then do
+       putStr "Malformed input! Try again.\n"
+       ask num c d
      else if answer == fromJust response
-             then putStr "Correct!\n"
-             else putStr $ "Wrong! Response: " ++ fromJust response ++ ", Answer: " ++ answer ++ "\n"
-  
+          then return True
+          else return False
+            
+          
+
 quiz :: IO ()
 quiz = do
   c <- randomCase
   n <- randomNumber
   d <- randomPureDeclension
-  ask n c d
+  correct <- ask n c d
+  if correct
+    then putStr $ get n c d ++ " Correct!\n"
+    else putStr $ "Wrong! Answer: " ++ get n c d ++ "\n"
   quiz
-
+  
 
 -- Data
-firstDeclension = buildFromStem "mens" ("table",
-                                        Fem,
+firstDeclension = buildFromStem "mens" (("table", Fem, "1 1"),
                                         ("a", "am", "ae", "ae", charLongA),
                                         ("ae", endingLongAS, endingLongARUM, endingLongIS, endingLongIS))
 
-secondDeclension1 = buildFromStem "serv" ("servant",
-                                          Masc,
+secondDeclension1 = buildFromStem "serv" (("servant", Masc, "2 1"),
                                           ("us", "um", charLongI, charLongO, charLongO),
                                           (charLongI, endingLongOS, endingLongORUM, endingLongIS, endingLongIS))
 
-secondDeclension2 = buildFromStem "verb" ("word",
-                                          Neut,
+secondDeclension2 = buildFromStem "verb" (("word", Neut, "2 2"),
                                           ("um", "um", charLongI, charLongO, charLongO),
                                           ("a", "a", endingLongORUM, endingLongIS, endingLongIS))
 
-thirdDeclension1 = buildFromStem "sol" ("word",
-                                        Masc,
+thirdDeclension1 = buildFromStem "sol" (("sun", Masc, "3 1"),
                                         ("", "em", "is", charLongI, "e"),
                                         (endingLongES, endingLongES, "um", "ibus", "ibus"))
 
 thirdDeclension2 = set Sing Nom "nomen" . set Sing Acc "nomen" $
-                   buildFromStem "nomin" ("name",
-                                          Neut,
+                   buildFromStem "nomin" (("name", Neut, "3 2"),
                                           ("?", "?", "is", charLongI, "e"),
                                           ("a", "a", "um", "ibus", "ibus"))
 
-fourthDeclension1 = buildFromStem "cas" ("fall",
-                                         Masc,
+fourthDeclension1 = buildFromStem "cas" (("fall", Masc, "4 1"),
                                          ("us", "um", endingLongUS, endingLongUI, charLongU),
                                          (endingLongUS, endingLongUS, "uum", "ibus", "ibus"))
 
-fourthDeclension2 = buildFromStem "corn" ("fall",
-                                          Masc,
+fourthDeclension2 = buildFromStem "corn" (("fall", Masc, "4 2"),
                                           (charLongU, charLongU, endingLongUS, charLongU, charLongU),
                                           ("ua", "ua", "uum", "ibus", "ibus"))
 
-fifthDeclension = buildFromStem "di" ("day",
-                                      Neut,
+fifthDeclension = buildFromStem "di" (("day", Neut, "5 1"),
                                       (endingLongES, "em", endingLongEI, endingLongEI, charLongE),
                                       (endingLongES, endingLongES, endingLongERUM, endingLongEBUS, endingLongEBUS))
 
