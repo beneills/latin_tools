@@ -13,7 +13,7 @@ Haskell utility to quiz on declensions.  To build and run:
 
 To install permenantly (as root):
 
-   mv declensions /usr/local/bin
+    mv declensions /usr/local/bin
 
 TODO:
 * DB of history
