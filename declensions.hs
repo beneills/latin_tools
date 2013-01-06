@@ -23,6 +23,8 @@ data Number = Sing | Plu
 -- Constants/Parameters
 asciiLongChar = '_'
 
+coloring = True
+
 vowels = "aeiou"
 
 charLongA = "ā"
@@ -43,23 +45,42 @@ endingLongOS = charLongO ++ "s"
 endingLongUI = charLongI
 endingLongUS = charLongU ++ "s"
 
+colors = [("red", "\x1b[31m"),
+          ("green", "\x1b[32m"),
+          ("yellow", "\x1b[33m"),
+          ("blue", "\x1b[34m"),
+          ("magenta", "\x1b[35m"),
+          ("cyan", "\x1b[36m"),
+          ("white", "\x1b[37m")]
+
+
 genderLetter :: Gender -> String
 genderLetter Masc = "M"
 genderLetter Fem = "F"
 genderLetter Neut = "N"
 
-hint :: Case -> (String -> String)
-hint Nom = ("The "++).(++"... ")
-hint Acc = ("... the "++)
-hint Gen = ("of the "++)
-hint Dat = ("to the "++)
-hint Abl = ("on the "++)
+hint :: Number -> Case -> (String -> String)
+hint Sing c = hint' c
+hint Plu Nom = ("The "++).(++"s... ")
+hint Plu c = (++"s") . hint' c
+
+hint' Nom = ("The "++).(++"... ")
+hint' Acc = ("... the "++)
+hint' Gen = ("of the "++)
+hint' Dat = ("to the "++)
+hint' Abl = ("on the "++)
 
 numberHint :: Number -> String
 numberHint Sing = "(sing.)"
 numberHint Plu = "(plu.)"
 
 -- Utility Functions
+
+colorize :: String -> String -> String
+colorize s = if isNothing x || not coloring
+             then id
+             else (fromJust x ++).(++"\x1b[0m")
+  where x = lookup s colors
 
 -- Random selection of declension
 randomCase = randomChoice [Nom, Acc, Gen, Dat, Abl]
@@ -115,7 +136,7 @@ asciiToLongChars :: String -> Maybe String
 asciiToLongChars s = (fmap concat . sequence) (f s)
   where f "" = [Just ""]
         f ['_'] = [Nothing]
-        f (c:'_':xs) = res : f xs
+        f ('_':c:xs) = res : f xs
           where res = case c of
                   'a' -> Just charLongA
                   'e' -> Just charLongE
@@ -130,11 +151,11 @@ asciiToLongChars s = (fmap concat . sequence) (f s)
 longCharsToAscii :: String -> String
 longCharsToAscii s = concat $ map f s
   where f c
-          | [c] == charLongA = "a" ++ [asciiLongChar]
-          | [c] == charLongE = "e" ++ [asciiLongChar]
-          | [c] == charLongI = "i" ++ [asciiLongChar]
-          | [c] == charLongO = "o" ++ [asciiLongChar]
-          | [c] == charLongU = "u" ++ [asciiLongChar]
+          | [c] == charLongA = asciiLongChar:"a"
+          | [c] == charLongE = asciiLongChar:"e"
+          | [c] == charLongI = asciiLongChar:"i"
+          | [c] == charLongO = asciiLongChar:"o"
+          | [c] == charLongU = asciiLongChar:"u"
           | otherwise        = [c]
 
 -- Create string of five lines containing the whole declension
@@ -153,20 +174,26 @@ dictionaryEntry :: Declension -> String
 dictionaryEntry d@((t, g, c), _, _) = get Sing Nom d ++ ", " ++ get Sing Gen d ++ ", "
                                  ++ c ++ " " ++ genderLetter g ++ ". (" ++ t ++ ")"
 
-dispatch = [("quiz", const quiz),
+dispatch = [("quiz", quiz),
             ("help", help)]
 
 
 help :: [String] -> IO ()
 help args = do
   usage Nothing False
-  putStr $ "Help dialogue... TODO\n"
+  putStr $ "This program tests your knowledge of pure Latin declensions.\n" ++
+           "Currently, it only can quiz you randomly on all declensions.\n\n" ++
+           "When entering answers, prepend a vowel with an underscore ('_')" ++
+           " to mark it as long.  The system currently requires you to" ++
+           " correctly mark all such vowels.\n\n" ++
+           "Try: 'declensions quiz' to try it out now!\n\n" ++
+           "TODO: --nocolors doesn't work\n"
   
 usage :: Maybe String -> Bool -> IO ()
 usage error exit = do
   name <- getProgName
   putStr $ f error
-  putStr $ "Usage: " ++ name ++ " quiz|help\n"
+  putStr $ "Usage: " ++ name ++ " quiz|help [--nocolors] [--nohints]\n"
   if exit
     then exitFailure
     else return ()
@@ -180,42 +207,54 @@ main = do
     then usage (Just "No action specified!") True
     else do
       let (command:params) = args
+      let coloring = if "--nocolors" `elem` params
+                     then False
+                     else True
       let action = lookup command dispatch
       if isNothing action
         then usage (Just $ "Invalid action: " ++ command ++ "!") True
         else fromJust action args
-  
+
   
 
 -- Challenge user on a particular declination
-ask :: Number -> Case -> Declension -> IO Bool
-ask num c d@((t, _, _), _, _) = do
+-- Bool: include stem?
+ask :: Bool -> Number -> Case -> Declension -> IO Bool
+ask s num c d@((t, _, _), _, _) = do
   let nHint = numberHint num
-  putStr $ hint c t  ++ " " ++ nHint ++ "? "
+      latinHint = if s then "[" ++ get Sing Nom d ++ "] " else ""
+  putStr $ latinHint ++ hint num c t  ++ " " ++ "[q]? "
   hFlush stdout
   raw <- getLine
+  
+  -- Possibly quit
+  if raw == "q"
+    then exitSuccess
+    else return ()
+  
   let response = asciiToLongChars raw
   let answer = get num c d
   if isNothing response
      then do
-       putStr "Malformed input! Try again.\n"
-       ask num c d
+       putStr $ colorize "red" "Malformed input! Try again.\n"
+       ask s num c d
      else if answer == fromJust response
           then return True
           else return False
             
           
 
-quiz :: IO ()
-quiz = do
+quiz :: [String] -> IO ()
+quiz args = do
   c <- randomCase
   n <- randomNumber
   d <- randomPureDeclension
-  correct <- ask n c d
+  let latinHints = if "--nohints" `elem` args then False else True
+  correct <- ask latinHints n c d
   if correct
-    then putStr $ get n c d ++ " Correct!\n"
-    else putStr $ "Wrong! Answer: " ++ get n c d ++ "\n"
-  quiz
+    then putStr $ colorize "green" "Correct! " ++ get n c d ++ "\n"
+    else putStr $ colorize "red" "Wrong!" ++ " Answer: " ++ get n c d ++ "\n"
+  quiz args
   
 
 -- Data
