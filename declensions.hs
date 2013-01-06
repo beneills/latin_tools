@@ -175,7 +175,9 @@ dictionaryEntry d@((t, g, c), _, _) = get Sing Nom d ++ ", " ++ get Sing Gen d +
                                  ++ c ++ " " ++ genderLetter g ++ ". (" ++ t ++ ")"
 
 dispatch = [("quiz", quiz),
-            ("help", help)]
+            ("list", list),
+            ("help", help),
+            ("--help", help)]
 
 
 help :: [String] -> IO ()
@@ -183,17 +185,18 @@ help args = do
   usage Nothing False
   putStr $ "This program tests your knowledge of pure Latin declensions.\n" ++
            "Currently, it only can quiz you randomly on all declensions.\n\n" ++
-           "When entering answers, prepend a vowel with an underscore ('_')" ++
+           "* When entering answers, prepend a vowel with an underscore ('_')" ++
            " to mark it as long.  The system currently requires you to" ++
            " correctly mark all such vowels.\n\n" ++
-           "Try: 'declensions quiz' to try it out now!\n\n" ++
-           "TODO: --nocolors doesn't work\n"
+           "* Try: 'declensions quiz' to try it out now!\n\n" ++
+           "* Also: 'declensions list 1.1|2.1|2.2|3.1|3.2|4.1|4.2|5'\n\n" ++
+           "* TODO: --nocolors doesn't work\n"
   
 usage :: Maybe String -> Bool -> IO ()
 usage error exit = do
   name <- getProgName
   putStr $ f error
-  putStr $ "Usage: " ++ name ++ " quiz|help [--nocolors] [--nohints]\n"
+  putStr $ "Usage: " ++ name ++ " quiz|list|help [LIST SPECIFIER][--nocolors] [--nohints]\n"
   if exit
     then exitFailure
     else return ()
@@ -213,7 +216,7 @@ main = do
       let action = lookup command dispatch
       if isNothing action
         then usage (Just $ "Invalid action: " ++ command ++ "!") True
-        else fromJust action args
+        else fromJust action params
 
   
 
@@ -255,6 +258,16 @@ quiz args = do
     then putStr $ colorize "green" "Correct! " ++ get n c d ++ "\n"
     else putStr $ colorize "red" "Wrong!" ++ " Answer: " ++ get n c d ++ "\n"
   quiz args
+  
+list :: [String] -> IO ()
+list args = do
+  if length args < 1
+    then usage (Just "Need a declension specifier e.g. '3.1'") True
+    else if isNothing $ lookup (args !! 0) labelledPureDeclensions 
+         then usage (Just "Couldn't find declension matching your specifier.") True
+         else return ()
+  putStr $ declensionTable (fromJust (lookup (args !! 0)
+                                      labelledPureDeclensions))
   
 
 -- Data
@@ -300,5 +313,14 @@ fullPureDeclensions = [firstDeclension,
                        fourthDeclension2,
                        fifthDeclension]
 
+labelledPureDeclensions = [("1.1", firstDeclension),
+                           ("2.1", secondDeclension1),
+                           ("2.2", secondDeclension2),
+                           ("3.1", thirdDeclension1),
+                           ("3.2", thirdDeclension2),
+                           ("4.1", fourthDeclension1),
+                           ("4.2", fourthDeclension2),
+                           ("5.1", fifthDeclension)]
+                           
 
                                           
