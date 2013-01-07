@@ -8,6 +8,7 @@ Declensions tool
 
 Haskell utility to quiz on declensions.  To build and run:
 
+    sudo apt-get install ghc libghc-random-dev
     ghc -outputdir /tmp declensions.hs
     ./declensions help
 
