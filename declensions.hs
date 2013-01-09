@@ -85,7 +85,7 @@ colorize s = if isNothing x || not coloring
 -- Random selection of declension
 randomCase = randomChoice [Nom, Acc, Gen, Dat, Abl]
 randomNumber = randomChoice [Sing, Plu]
-randomPureDeclension = randomChoice fullPureDeclensions
+randomPureDeclension curriculum = randomChoice $ map snd $ filter ((`elem` curriculum) . fst) labelledPureDeclensions
 randomChoice xs = fmap (xs!!) $ randomRIO (0, length xs - 1)
 
 -- Decline a noun!
@@ -189,6 +189,7 @@ help args = do
            " to mark it as long.  The system currently requires you to" ++
            " correctly mark all such vowels.\n\n" ++
            "* Try: 'declensions quiz' to try it out now!\n\n" ++
+           "* Do, e.g. 'declensions quiz 1.1 4.2' to test onyl soem declensions.\n\n" ++
            "* Also: 'declensions list 1.1|2.1|2.2|3.1|3.2|4.1|4.2|5'\n\n" ++
            "* TODO: --nocolors doesn't work\n"
   
@@ -196,7 +197,7 @@ usage :: Maybe String -> Bool -> IO ()
 usage error exit = do
   name <- getProgName
   putStr $ f error
-  putStr $ "Usage: " ++ name ++ " quiz|list|help [LIST SPECIFIER][--nocolors] [--nohints]\n"
+  putStr $ "Usage: " ++ name ++ " quiz|list|help [LIST SPECIFIER][--nocolors] [--nohints] [DECLENSION SPECIFIER ...]\n"
   if exit
     then exitFailure
     else return ()
@@ -249,10 +250,16 @@ ask s num c d@((t, _, _), _, _) = do
 
 quiz :: [String] -> IO ()
 quiz args = do
+  let latinHints = not $ "--nohints" `elem` args
+  -- If user has specified some declensions, test oly them.  Else, test everything.
+  let curriculum = if null specified then labels else specified
+      specified = filter (`elem` labels) args
+      labels = map fst labelledPureDeclensions
+
   c <- randomCase
   n <- randomNumber
-  d <- randomPureDeclension
-  let latinHints = if "--nohints" `elem` args then False else True
+  d <- randomPureDeclension curriculum
+  
   correct <- ask latinHints n c d
   if correct
     then putStr $ colorize "green" "Correct! " ++ get n c d ++ "\n"
@@ -304,14 +311,6 @@ fifthDeclension = buildFromStem "di" (("day", Neut, "5 1"),
                                       (endingLongES, "em", endingLongEI, endingLongEI, charLongE),
                                       (endingLongES, endingLongES, endingLongERUM, endingLongEBUS, endingLongEBUS))
 
-fullPureDeclensions = [firstDeclension,
-                       secondDeclension1,
-                       secondDeclension2,
-                       thirdDeclension1,
-                       thirdDeclension2,
-                       fourthDeclension1,
-                       fourthDeclension2,
-                       fifthDeclension]
 
 labelledPureDeclensions = [("1.1", firstDeclension),
                            ("2.1", secondDeclension1),
