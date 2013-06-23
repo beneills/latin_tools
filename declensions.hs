@@ -131,7 +131,7 @@ caseList (nom, acc, gen, dat, abl) = [nom, acc, gen, dat, abl]
 buildFromStem :: Stem -> Endings -> Declension
 buildFromStem stem = declensionMap (stem++)
 
--- e.g. "mensa_" -> "mensā"
+-- e.g. "mēnsa_" -> "mēnsā"
 asciiToLongChars :: String -> Maybe String
 asciiToLongChars s = (fmap concat . sequence) (f s)
   where f "" = [Just ""]
@@ -147,7 +147,7 @@ asciiToLongChars s = (fmap concat . sequence) (f s)
 
         f (c:xs) = [Just [c]] ++ f xs
 
--- e.g. "mensā" -> "mensa_"
+-- e.g. "mēnsā" -> "mēnsa_"
 longCharsToAscii :: String -> String
 longCharsToAscii s = concat $ map f s
   where f c
@@ -278,7 +278,7 @@ list args = do
   
 
 -- Data
-firstDeclension = buildFromStem "mens" (("table", Fem, "1 1"),
+firstDeclension = buildFromStem "mēns" (("table", Fem, "1 1"),
                                         ("a", "am", "ae", "ae", charLongA),
                                         ("ae", endingLongAS, endingLongARUM, endingLongIS, endingLongIS))
 
@@ -290,16 +290,16 @@ secondDeclension2 = buildFromStem "verb" (("word", Neut, "2 2"),
                                           ("um", "um", charLongI, charLongO, charLongO),
                                           ("a", "a", endingLongORUM, endingLongIS, endingLongIS))
 
-thirdDeclension1 = buildFromStem "sol" (("sun", Masc, "3 1"),
+thirdDeclension1 = buildFromStem "sōl" (("sun", Masc, "3 1"),
                                         ("", "em", "is", charLongI, "e"),
                                         (endingLongES, endingLongES, "um", "ibus", "ibus"))
 
-thirdDeclension2 = set Sing Nom "nomen" . set Sing Acc "nomen" $
-                   buildFromStem "nomin" (("name", Neut, "3 2"),
+thirdDeclension2 = set Sing Nom "nōmen" . set Sing Acc "nōmen" $
+                   buildFromStem "nōmin" (("name", Neut, "3 2"),
                                           ("?", "?", "is", charLongI, "e"),
                                           ("a", "a", "um", "ibus", "ibus"))
 
-fourthDeclension1 = buildFromStem "cas" (("fall", Masc, "4 1"),
+fourthDeclension1 = buildFromStem "cās" (("fall", Masc, "4 1"),
                                          ("us", "um", endingLongUS, endingLongUI, charLongU),
                                          (endingLongUS, endingLongUS, "uum", "ibus", "ibus"))
 
