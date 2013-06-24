@@ -1,0 +1,80 @@
+Full list of regular (non-Greek) declensions, generated using the declensions program, a Bash loop, emacs and org-mode.
+
+
+| 1.1  |        |          |
+|------+--------+----------|
+| Nom. | mēnsa  | mēnsae   |
+| Acc. | mēnsam | mēnsās   |
+| Gen. | mēnsae | mēnsārum |
+| Dat. | mēnsae | mēnsīs   |
+| Abl. | mēnsā  | mēnsīs   |
+
+&
+
+| 2.1  |        |          |
+|------+--------+----------|
+| Nom. | servus | servī    |
+| Acc. | servum | servōs   |
+| Gen. | servī  | servōrum |
+| Dat. | servō  | servīs   |
+| Abl. | servō  | servīs   |
+
+&
+
+| 2.2  |        |          |
+|------+--------+----------|
+| Nom. | verbum | verba    |
+| Acc. | verbum | verba    |
+| Gen. | verbī  | verbōrum |
+| Dat. | verbō  | verbīs   |
+| Abl. | verbō  | verbīs   |
+
+&
+
+| 3.1  |       |         |
+|------+-------+---------|
+| Nom. | sōl   | sōlēs   |
+| Acc. | sōlem | sōlēs   |
+| Gen. | sōlis | sōlum   |
+| Dat. | sōlī  | sōlibus |
+| Abl. | sōle  | sōlibus |
+
+&
+
+| 3.2  |         |           |
+|------+---------+-----------|
+| Nom. | nōmen   | nōmina    |
+| Acc. | nōmen   | nōmina    |
+| Gen. | nōminis | nōminum   |
+| Dat. | nōminī  | nōminibus |
+| Abl. | nōmine  | nōminibus |
+
+&
+
+| 4.1  |       |         |
+|------+-------+---------|
+| Nom. | cāsus | cāsūs   |
+| Acc. | cāsum | cāsūs   |
+| Gen. | cāsūs | cāsuum  |
+| Dat. | cāsī  | cāsibus |
+| Abl. | cāsū  | cāsibus |
+
+&
+
+| 4.2  |        |          |
+|------+--------+----------|
+| Nom. | cornū  | cornua   |
+| Acc. | cornū  | cornua   |
+| Gen. | cornūs | cornuum  |
+| Dat. | cornū  | cornibus |
+| Abl. | cornū  | cornibus |
+
+&
+
+| 5.1  |      |        |
+|------+------+--------|
+| Nom. | diēs | diēs   |
+| Acc. | diem | diēs   |
+| Gen. | diēī | diērum |
+| Dat. | diēī | diēbus |
+| Abl. | diē  | diēbus |
