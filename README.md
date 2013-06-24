@@ -19,6 +19,5 @@ To install permenantly (as root):
 TODO:
 * DB of history
 * Selective quizzing
-* Ability to list declension
 
 Hope you find this useful!  Please improve it!
