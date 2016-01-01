@@ -1,5 +1,6 @@
 Full list of regular (non-Greek) declensions, generated using the declensions program, a Bash loop, emacs and org-mode.
 
+* First
 
 | 1.1  |        |          |
 |------+--------+----------|
@@ -9,7 +10,7 @@ Full list of regular (non-Greek) declensions, generated using the declensions pr
 | Dat. | mēnsae | mēnsīs   |
 | Abl. | mēnsā  | mēnsīs   |
 
-&
+* Second
 
 | 2.1  |        |          |
 |------+--------+----------|
@@ -19,8 +20,6 @@ Full list of regular (non-Greek) declensions, generated using the declensions pr
 | Dat. | servō  | servīs   |
 | Abl. | servō  | servīs   |
 
-&
-
 | 2.2  |        |          |
 |------+--------+----------|
 | Nom. | verbum | verba    |
@@ -29,7 +28,7 @@ Full list of regular (non-Greek) declensions, generated using the declensions pr
 | Dat. | verbō  | verbīs   |
 | Abl. | verbō  | verbīs   |
 
-&
+* Third
 
 | 3.1  |       |         |
 |------+-------+---------|
@@ -39,8 +38,6 @@ Full list of regular (non-Greek) declensions, generated using the declensions pr
 | Dat. | sōlī  | sōlibus |
 | Abl. | sōle  | sōlibus |
 
-&
-
 | 3.2  |         |           |
 |------+---------+-----------|
 | Nom. | nōmen   | nōmina    |
@@ -49,7 +46,7 @@ Full list of regular (non-Greek) declensions, generated using the declensions pr
 | Dat. | nōminī  | nōminibus |
 | Abl. | nōmine  | nōminibus |
 
-&
+* Fourth
 
 | 4.1  |       |         |
 |------+-------+---------|
@@ -59,8 +56,6 @@ Full list of regular (non-Greek) declensions, generated using the declensions pr
 | Dat. | cāsī  | cāsibus |
 | Abl. | cāsū  | cāsibus |
 
-&
-
 | 4.2  |        |          |
 |------+--------+----------|
 | Nom. | cornū  | cornua   |
@@ -69,7 +64,7 @@ Full list of regular (non-Greek) declensions, generated using the declensions pr
 | Dat. | cornū  | cornibus |
 | Abl. | cornū  | cornibus |
 
-&
+* Fifth
 
 | 5.1  |      |        |
 |------+------+--------|
